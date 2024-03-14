@@ -1,0 +1,169 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ page import="java.sql.*" %>
+<%@ page import="javax.servlet.http.*" %>
+<%@ page import="java.util.*" %>
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            width: 80%;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .logout-btn {
+            text-align: right;
+            margin-bottom: 20px;
+        }
+        form {
+            margin-bottom: 20px;
+        }
+        input[type="submit"],
+        input[type="button"] {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        input[type="submit"]:hover,
+        input[type="button"]:hover {
+            background-color: #45a049;
+        }
+        input[type="text"],
+        select,
+        input[type="date"] {
+            padding: 8px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            width: 150px;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2 style="text-align: center;">Admin Dashboard</h2>
+        <a href="ExportDataServlet">Export Data as CSV</a>
+        <div class="logout-btn">
+            <form action="LogoutServlet" method="post">
+                <input type="submit" value="Logout">
+            </form>
+        </div>
+        <div>
+            <form action="#" method="post">
+                <label for="taskName">Task Name:</label>
+                <input type="text" id="taskName" name="taskName">
+                <label for="taskStatus">Status:</label>
+                <select id="taskStatus" name="taskStatus">
+                    <option value="">All</option>
+                    <option value="Pending">Pending</option>
+                    <option value="In Progress">In Progress</option>
+                    <option value="Completed">Completed</option>
+                </select>
+                <label for="dueDate">Due Date:</label>
+                <input type="date" id="dueDate" name="dueDate">
+                <input type="submit" value="Search">
+            </form>
+        </div>
+
+        <div>
+            <input type="button" value="Assign Task" onclick="window.location.href='assignTask.jsp'">
+        </div>
+                <div>
+            <p> </p>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Task Name</th>
+                    <th>Task Description</th>
+                    <th>Due Date</th>
+                    <th>Review Date</th>
+                    <th>Status</th>
+                    <th>Progress</th>
+                    <th>Staff Member</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% 
+                    try {
+                        Class.forName("com.mysql.cj.jdbc.Driver");
+                        Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/managementsystem", "root", "");
+                        String taskNameFilter = request.getParameter("taskName");
+                        String taskStatusFilter = request.getParameter("taskStatus");
+                        String dueDateFilter = request.getParameter("dueDate");
+                        String query = "SELECT * FROM task_assignments WHERE 1=1";
+                        if (taskNameFilter != null && !taskNameFilter.isEmpty()) {
+                            query += " AND task_name LIKE '%" + taskNameFilter + "%'";
+                        }
+                        if (taskStatusFilter != null && !taskStatusFilter.isEmpty()) {
+                            query += " AND task_status = '" + taskStatusFilter + "'";
+                        }
+                        if (dueDateFilter != null && !dueDateFilter.isEmpty()) {
+                            query += " AND due_date = '" + dueDateFilter + "'";
+                        }
+                        PreparedStatement pstmt = conn.prepareStatement(query);
+                        ResultSet rs = pstmt.executeQuery();
+                        while (rs.next()) {
+                            String taskName = rs.getString("task_name");
+                            String taskDesc = rs.getString("task_description");
+                            String dueDate = rs.getString("due_date");
+                            String reviewDate = rs.getString("review_date");
+                            String status = rs.getString("task_status");
+                            String progress = rs.getString("progress");
+                            String staffMember = rs.getString("staff_member");
+                            int taskId = rs.getInt("id");
+                %>
+                <tr>
+                    <td><%= taskName %></td>
+                    <td><%= taskDesc %></td>
+                    <td><%= dueDate %></td>
+                    <td><%= reviewDate %></td>
+                    <td><%= status %></td>
+                    <td><%= progress %></td>
+                    <td><%= staffMember %></td>
+                    <td>
+                        <form action="DeleteTaskServlet" method="post">
+                            <input type="hidden" name="taskId" value="<%= taskId %>">
+                            <input type="submit" value="Delete">
+                        </form>
+                    </td>
+                </tr>
+                <% 
+                        }
+                    } catch (SQLException | ClassNotFoundException e) {
+                        e.printStackTrace();
+                    }
+                %>
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>
