@@ -1,88 +1,33 @@
-<?php
-
-session_start();
-require_once 'dbconfig.php';
-
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $email = $_POST['email'];
-    $password = $_POST['password'];
-
-    if ($email == "admin" && $password == "admin") {
-        $_SESSION['userId'] = 0;
-        header("Location: ../admin_dashboard.php");
-        exit;
-    }
-
-    try {
-        $conn = new PDO("mysql:host=$host;dbname=$dbname", $dbusername, $dbpassword);
-        $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-
-        $stmt = $conn->prepare("SELECT * FROM Users WHERE email = ? AND password = ?");
-        $stmt->execute([$email, $password]);
-
-        if ($stmt->rowCount() == 1) {
-            $user = $stmt->fetch(PDO::FETCH_ASSOC);
-            $userId = $user['id'];
-            $role = $user['role'];
-
-            if ($role == 0){
-                
-                $_SESSION['userId'] = $userId;
-                
-                $stmt = $conn->prepare("SELECT access_level FROM task_assignments WHERE user_id = ?");
-                
-                $stmt->execute([$userId]);
-                
-                sleep(1);
-                
-                if ($stmt->rowCount() > 0) {
-                    $firstRow = $stmt->fetch(PDO::FETCH_ASSOC);
-    
-                    $secondRow = $stmt->fetch(PDO::FETCH_ASSOC);
-                    if ($secondRow !== false) {
-                        $accessLevel = $secondRow['access_level'];
-                        $_SESSION['accessLevel'] = $accessLevel;
-                    } else {
-                        $accessLevel = $firstRow['access_level'];
-                        $_SESSION['accessLevel'] = $accessLevel;
-                        echo "There is no second row in the result set.";
-                    }             
-                                
-                    switch ($accessLevel) {
-                        
-                        case 0:
-                            header("Location: ../assigned_tasks.php");
-                            break;
-                        
-                        case 1:
-                            header("Location: ../no_task_assigned.php");
-                            break;
-                        
-                        default:
-                            header("Location: ../no_task_assigned.php");
-                            break;
-                    }
-                    exit;
-                } else {
-                    
-                    header("Location: ../no_task_assigned.php");
-                    exit;
-                }
-            }
-            else {
-                $_SESSION['userId'] = $userId;
-                header("Location: ../supervisor.php");
-                exit;
-            }
-            
-        } else {
-            
-            $_SESSION['authFailure'] = true;
-            header("Location: ../login.php");
-            exit;
-        }
-    } catch (PDOException $e) {
-        echo "Error: " . $e->getMessage();
-    }
-}
-?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Page</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.0.1/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-200 flex justify-center items-center min-h-screen">
+    <div class="w-full max-w-xs">
+        <form action="./backend/login.php" method="post" class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
+            <h1 class="text-lg font-bold text-center mb-4">Login Page</h1>
+            <?php if (isset($_SESSION['authFailure'])): ?>
+                <p class="text-red-500 text-sm text-center">Incorrect email or password. Please try again.</p>
+            <?php unset($_SESSION['authFailure']); endif; ?>
+            <div class="mb-4">
+                <label for="email" class="block text-gray-700 text-sm font-bold mb-2">Email:</label>
+                <input type="text" id="email" name="email" required class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+            </div>
+            <div class="mb-6">
+                <label for="password" class="block text-gray-700 text-sm font-bold mb-2">Password:</label>
+                <input type="password" id="password" name="password" required class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline">
+            </div>
+            <div class="flex items-center justify-between">
+                <input type="submit" value="Login" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline cursor-pointer">
+                <button onclick="window.location.href='register.php'" type="button" class="inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800">
+                    Register
+                </button>
+            </div>
+        </form>
+    </div>
+</body>
+</html>
