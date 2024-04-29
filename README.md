@@ -1,1 +1,4 @@
-# Software
+to explain how our github has worked we as a group started off doing this prototype using java but we encourtered issues that we struggled to fix. to save time as we could find a solution we collectively decided to switch to PHP using visual studio code as the software. this was a decision made by myself, the group leader as i decided that PHP would be simpler and easier to edit for our group members. 
+our whole project including testing is in the file TaskManager.zip.
+to run this project you need XAMPP and place this TaskManager file inside the htdocs of xampp. this connects it to the database where the data will get saved.
+as for the testing that we have done. the unit testing the way we did it is we used composer to compose the testing files then to run testing you go into the AdminDashboardTest.php and go to terminal then type the command 'composer install' then once that is successfull you type the command ./vendor/bin/phpunit which should then show 8/8 success and the time it took ad the memory.
